@@ -66,8 +66,6 @@ class MultiDirectTrainer(Trainer):
         self.eval_direct = InteractDirect.SIDE_A
         struct_A = self.collect_bilateral_info(eval_data[0], eval_func, show_progress, self.eval_direct)
         result_A = self.evaluator.evaluate(struct_A)
-        # if not self.config["single_spec"]:
-            # result_A = self._map_reduce(result_A, num_sample)
 
         self.config.change_direction()
         if isinstance(eval_data[1], RFullSortEvalDataLoader):
@@ -78,10 +76,7 @@ class MultiDirectTrainer(Trainer):
         self.eval_direct = InteractDirect.SIDE_B
         struct_B = self.collect_bilateral_info(eval_data[1], eval_func, show_progress, self.eval_direct)
         result_B = self.evaluator.evaluate(struct_B)
-        # if not self.config["single_spec"]:
-            # test_result_j = self._map_reduce(test_result_j, num_sample)
         self.config.change_direction()
-
 
         arr = self.all_rec.cpu().numpy()
         uni, idx, count = np.unique(arr, return_index=True, return_counts=True,axis=0)
@@ -91,12 +86,9 @@ class MultiDirectTrainer(Trainer):
             if c > 1:
                 dup_idx.extend(self.all_rec_rank[idx[i]: idx[i] + c])
                 
-        
         unique_rec = torch.unique(self.all_rec, dim=0)
         unique_rec_num = unique_rec.shape[0]
 
-        # import pdb
-        # pdb.set_trace()
         total_positive_pairs = struct_A.get('rec.topk').sum(dim=0)[-1]
         n_users_A = struct_A.get('rec.topk').shape[0]
         n_users_B = struct_B.get('rec.topk').shape[0]
@@ -105,66 +97,37 @@ class MultiDirectTrainer(Trainer):
         # calculate CRecall 
         crecall = unique_rec_num / total_positive_pairs
         # calculate CPrecision
-        cprecision = torch.Tensor([unique_rec_num / n_topk / (n_users_A + n_users_B)]).squeeze()
-        # calculate Rndcg
-
+        cprecision = torch.tensor(unique_rec_num / n_topk / (n_users_A + n_users_B))
         # calculate SRecall
-        srecall = torch.Tensor([2 * (self.all_rec.shape[0] - unique_rec_num) / total_positive_pairs]).squeeze()
+        srecall = torch.tensor(2 * (self.all_rec.shape[0] - unique_rec_num) / total_positive_pairs)
         # calculate SPrecision
-        sprecision = torch.Tensor([2 * (self.all_rec.shape[0] - unique_rec_num) / n_topk / (n_users_A + n_users_B)]).squeeze()
+        sprecision = torch.tensor(2 * (self.all_rec.shape[0] - unique_rec_num) / n_topk / (n_users_A + n_users_B))
+        # calculate Rndcg
+        rndcg = torch.tensor(result_A[f'ndcg@{n_topk}'] * n_users_A + result_B[f'ndcg@{n_topk}'] * n_users_B) / (n_users_A + n_users_B)
 
+        # import pdb
+        # pdb.set_trace()
         result_dict = dict()
         result_dict['crecall'] = crecall
         result_dict['cprecision'] = cprecision
         result_dict['srecall'] = srecall
         result_dict['sprecision'] = sprecision
+        result_dict[f'rndcg@{n_topk}'] = rndcg
 
         result_A.update(result_dict)
         result_B.update(result_dict)
 
         return result_A, result_B
     
-        # The old ones are the following
-        # ==============
         # import matplotlib.pyplot as plt
-            
-        # import pdb
-        # pdb.set_trace()
         # y_lables = [i / 10 for i in range(0,r)]
         # plt.yticks(y_lables, fontsize=15)
-        
         # plt.xticks(fontsize=15)  # 默认字体大小为10
         # plt.yticks(fontsize=15)
         # plt.xlabel('Ranking Position', fontsize=15)
         # plt.ylabel('Count', fontsize=15)
-
         # plt.hist(dup_idx, bins = np.arange(min(dup_idx), max(dup_idx) + 2))
         # plt.savefig("figure.pdf")
-    
-
-
-        # # calculate crecall 
-        # crecall = unique_rec_num / struct_A.get('rec.topk').sum(dim=0)[-1]
-        # # calculate cprecision
-        # total_rec_count = torch.Tensor([(struct_A.get('rec.topk').shape[0] * (struct_A.get('rec.topk').shape[1] - 1) + 
-        #                                 struct_B.get('rec.topk').shape[0] * (struct_B.get('rec.topk').shape[1] - 1))])
-        # cprecision = unique_rec_num / total_rec_count
-        # # calculate Rndcg
-
-        # # calculate Rstable
-        # # rstable = torch.Tensor([2 * (self.all_rec.shape[0] - unique_rec_num) / struct_A.get('rec.topk').sum(dim=0)[-1]])
-        # rstable = torch.Tensor([2 * (self.all_rec.shape[0] - unique_rec_num) / self.all_rec.shape[0]])
-
-        # result_dict = dict()
-        # result_dict['crecall'] = crecall
-        # result_dict['cprecision'] = cprecision
-        # result_dict['rstable'] = rstable
-
-        # result_A.update(result_dict)
-        # result_B.update(result_dict)
-
-        # return result_A, result_B
-        # ===============
 
     def _full_sort_batch_eval(self, batched_data):
         interaction, history_index, positive_u, positive_i = batched_data
@@ -174,14 +137,14 @@ class MultiDirectTrainer(Trainer):
         batch_size = len(new_inter)
         new_inter.update(self.item_tensor.repeat(inter_len))
         if batch_size <= self.test_batch_size:
-            if self.config['model'] in ['BBPR', 'BBPR2', 'BBPRMLP', 'CausCF', 'test', 'BLightGCN', 'CRRS']:
+            try:
                 scores = self.model.predict(new_inter, self.eval_direct.value)
-            else:
+            except:
                 scores = self.model.predict(new_inter)
         else:
-            if self.config['model'] in ['BBPR', 'BBPR2', 'BBPRMLP', 'CausCF', 'test', 'BLightGCN', 'CRRS']:
-                scores = self.model.predict(new_inter, self.eval_direc.value)
-            else:
+            try:
+                scores = self.model.predict(new_inter, self.eval_direct.value)
+            except:
                 scores = self._spilt_predict(new_inter, batch_size)
 
         scores = scores.view(-1, self.tot_item_num)
@@ -205,8 +168,6 @@ class MultiDirectTrainer(Trainer):
             else eval_data
         )
 
-        # positive_u_list = []
-
         num_sample = 0
         for batch_idx, batched_data in enumerate(iter_data):
             num_sample += len(batched_data)
@@ -228,8 +189,6 @@ class MultiDirectTrainer(Trainer):
             pos_idx = torch.gather(pos_matrix, dim=1, index=topk_idx)
             real_rec_positive = topk_idx[pos_idx == 1]
 
-            # import pdb
-            # pdb.set_trace()
             rank_idx = torch.cat([torch.arange(1, self.config['topk'][0] + 1).to(self.device).unsqueeze(0)] * pos_idx.shape[0], dim=0)
             rank_idx = rank_idx[pos_idx == 1]
 
