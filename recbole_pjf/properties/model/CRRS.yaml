@@ -4,6 +4,6 @@ reg_weight: 0.0005
 # REMAIN_NEG: True
 alpha: 0.99
 sample_users: 1
-base_model: BPR
-pretrained_path: base_model/BPR-base.pth 
-# pretrained_path: base_model/LightGCN-base.pth
+base_model: LightGCN
+# pretrained_path: base_model/BPR-base.pth 
+pretrained_path: base_model/LightGCN-base.pth
