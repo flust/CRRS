@@ -105,8 +105,6 @@ class MultiDirectTrainer(Trainer):
         # calculate Rndcg
         rndcg = torch.tensor(result_A[f'ndcg@{n_topk}'] * n_users_A + result_B[f'ndcg@{n_topk}'] * n_users_B) / (n_users_A + n_users_B)
 
-        # import pdb
-        # pdb.set_trace()
         result_dict = dict()
         result_dict['crecall'] = crecall
         result_dict['cprecision'] = cprecision
