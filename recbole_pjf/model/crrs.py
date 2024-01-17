@@ -147,8 +147,8 @@ class CRRS(GeneralRecommender):
         score_01 = self.sigmoid(self.model01.predict(interaction)) + user_score_thre
         score_10 = self.sigmoid(self.model10.predict(interaction)) + item_score_thre
 
-        rec_to_a = score_10 > self.alpha * score_01
-        rec_to_b = self.alpha * score_10 < score_01
+        rec_to_a = (score_10 > self.alpha * score_01) * (score_10 > self.alpha * score_01)
+        rec_to_b = (self.alpha * score_10 < score_01) * (score_01 > self.alpha * score_10)
 
         rec_to_both = (score_11 > score_01) * (score_11 > score_10) 
         # rec_to_a = (score_10 > score_11) * (score_10 > score_01)
