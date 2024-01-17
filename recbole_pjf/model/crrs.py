@@ -32,45 +32,6 @@ from recbole.model.loss import BPRLoss, EmbLoss
 from recbole.utils import InputType
 
 
-class BPR_base(BPR):
-    def __init__(self, config, dataset):
-        super(BPR_base, self).__init__(config, dataset)
-        self.neg_user_id = self.NEG_USER_ID = config['NEG_PREFIX'] + self.USER_ID
-        path = config['pretrained_path']
-        self.load_pretrain_weight(path)
-    
-    def load_pretrain_weight(self, path):
-        state_dict = torch.load(path)
-        self.user_embedding.weight.data = state_dict['state_dict']['user_embedding.weight']
-        self.item_embedding.weight.data = state_dict['state_dict']['item_embedding.weight']
-    
-    def calculate_loss(self, interaction, direct):
-        user = interaction[self.USER_ID]
-        pos_item = interaction[self.ITEM_ID]
-        neg_item = interaction[self.NEG_ITEM_ID]
-        neg_user = interaction[self.NEG_USER_ID]
-
-        u_embeddings = self.user_embedding(user)
-        pos_embeddings = self.item_embedding(pos_item)
-        neg_embeddings = self.item_embedding(neg_item)
-        neg_u_embeddings = self.user_embedding(neg_user)
-        # calculate BPR Loss
-        pos_scores = torch.mul(u_embeddings, pos_embeddings).sum(dim=1)
-        neg_scores = torch.mul(u_embeddings, neg_embeddings).sum(dim=1)
-        neg_u_scores = torch.mul(neg_u_embeddings, pos_embeddings).sum(dim=1)
-        loss = self.loss(pos_scores * (direct == 1), neg_scores * (direct == 1)) \
-                        + self.loss(pos_scores * (direct == 2), neg_u_scores * (direct == 2))
-        
-        # user_e, pos_e = self.forward(user, pos_item)
-        # neg_e = self.get_item_embedding(neg_item)
-        
-        # pos_item_score, neg_item_score = torch.mul(user_e, pos_e).sum(dim=1), torch.mul(user_e, neg_e).sum(dim=1)
-        # loss = self.loss(pos_item_score, neg_item_score)
-        # print(loss)
-        return loss
-
-
-
 class LightGCN_base(LightGCN):
     input_type = InputType.PAIRWISE
 
@@ -136,17 +97,9 @@ class CRRS(GeneralRecommender):
         self.sigmoid = nn.Sigmoid()
         self.alpha = config['alpha']
 
-        if self.base_model == 'BPR':
-            self.model10 = BPR_base(config, dataset)
-            self.model01 = BPR_base(config, dataset)
-            self.model11 = BPR_base(config, dataset)
-        elif self.base_model == 'LightGCN':
-            self.model11 = LightGCN_base(config, dataset)
-            self.model01 = LightGCN_base(config, dataset)
-            self.model10 = LightGCN_base(config, dataset)
-        else:
-            raise ValueError(f"The parameter \'base_model\' should be BPR or LightGCN") 
-            
+        self.model11 = LightGCN_base(config, dataset)
+        self.model01 = LightGCN_base(config, dataset)
+        self.model10 = LightGCN_base(config, dataset)
 
     def calculate_loss(self, interaction):
         direct = interaction[self.DIRECT_FIELD] # 1 / 2
@@ -170,7 +123,7 @@ class CRRS(GeneralRecommender):
         loss += self.model01.calculate_loss(interaction[add_idx == 3], (3 - direct)[add_idx == 3])
         loss += self.model10.calculate_loss(interaction[add_idx == 3], direct[add_idx == 3])
         loss += self.model10.calculate_loss(interaction[add_idx == 3], (3 - direct)[add_idx == 3])
-        
+
         return loss
 
     def get_avg_score(self, user, item):
