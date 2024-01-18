@@ -1,24 +1,3 @@
-# -*- coding: utf-8 -*-
-# @Time   : 2020/8/31
-# @Author : Changxin Tian
-# @Email  : cx.tian@outlook.com
-
-# UPDATE:
-# @Time   : 2020/9/16, 2021/12/22
-# @Author : Shanlei Mu, Gaowei Zhang
-# @Email  : slmu@ruc.edu.cn, 1462034631@qq.com
-
-r"""
-LightGCN
-################################################
-
-Reference:
-    Xiangnan He et al. "LightGCN: Simplifying and Powering Graph Convolution Network for Recommendation." in SIGIR 2020.
-
-Reference code:
-    https://github.com/kuandeng/LightGCN
-"""
-
 import numpy as np
 import scipy.sparse as sp
 import torch

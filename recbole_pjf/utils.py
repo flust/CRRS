@@ -1,12 +1,3 @@
-# @Time   : 2022/3/2
-# @Author : Chen Yang
-# @Email  : flust@ruc.edu.cn
-
-"""
-recbole_pjf.utils
-########################
-"""
-
 import importlib
 from recbole.utils import get_model as get_recbole_model
 from recbole.utils import get_trainer as get_recbole_trainer

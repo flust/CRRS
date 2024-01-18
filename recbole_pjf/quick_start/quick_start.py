@@ -1,11 +1,3 @@
-# @Time   : 2022/3/2
-# @Author : Chen Yang
-# @Email  : flust@ruc.edu.cn
-
-"""
-recbole_pjf.quick_start
-########################
-"""
 import logging
 from logging import getLogger
 

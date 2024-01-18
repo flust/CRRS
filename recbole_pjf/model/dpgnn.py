@@ -1,11 +1,3 @@
-# @Time   : 2022/3/21
-# @Author : Chen Yang
-# @Email  : flust@ruc.edu.cn
-
-"""
-pjfbole
-"""
-
 import numpy as np
 import torch
 import torch.nn as nn

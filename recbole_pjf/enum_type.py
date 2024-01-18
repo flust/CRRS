@@ -1,11 +1,3 @@
-# @Time   : 2022/3/11
-# @Author : Chen Yang
-# @Email  : flust@ruc.edu.cn
-
-"""
-recbole_pjf
-"""
-
 from enum import Enum
 
 

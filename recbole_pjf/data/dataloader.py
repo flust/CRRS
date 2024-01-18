@@ -1,12 +1,3 @@
-# @Time   : 2022/3/4
-# @Author : Chen Yang
-# @Email  : flust@ruc.edu.cn
-
-"""
-pjfbole.data.dataloader
-########################
-"""
-
 import torch
 import numpy as np
 from recbole.data.dataloader.general_dataloader import TrainDataLoader

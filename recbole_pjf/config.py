@@ -1,12 +1,3 @@
-# @Time   : 2022/3/2
-# @Author : Chen Yang
-# @Email  : flust@ruc.edu.cn
-
-"""
-recbole_pjf.config
-##########################
-"""
-
 import os
 from recbole.config import Config
 from recbole_pjf.utils import get_model

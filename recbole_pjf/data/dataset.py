@@ -1,12 +1,3 @@
-# @Time   : 2022/03/01
-# @Author : Chen Yang
-# @Email  : flust@ruc.edu.cn
-
-"""
-recbole_pjf.data.pjf_dataset
-##########################
-"""
-
 import copy
 import os
 import numpy as np

@@ -1,12 +1,3 @@
-# @Time   : 2022/03/01
-# @Author : Chen Yang
-# @Email  : flust@ruc.edu.cn
-
-"""
-recbole_pjf.data.utils
-########################
-"""
-
 import importlib
 import os
 import pickle
