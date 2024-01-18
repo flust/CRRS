@@ -1,8 +1,3 @@
-# @Time   : 2022/3/2
-# @Author : Chen Yang
-# @Email  : flust@ruc.edu.cn
-
-
 import argparse
 
 from recbole_pjf.quick_start import run_recbole_pjf
